@@ -125,7 +125,6 @@
     
     // --- Global Variables and Element References ---
     const overlay = document.getElementById('overlay');
-    const startBtn = document.getElementById('startBtn');
     const timerDisplay = document.getElementById('timerDisplay');
     let gameFinished = false;
     let timedMode = false; // Untimed for first play; true after "Play Again" / "Try Again"
@@ -361,7 +360,6 @@
         });
         
         if (closestT === Infinity || !hitPoint) {
-          // Extend ray to canvas bounds
           let tBound = Infinity;
           if (dx > 0) tBound = Math.min(tBound, (canvasWidth - sx) / dx);
           if (dx < 0) tBound = Math.min(tBound, -sx / dx);
@@ -379,7 +377,6 @@
         }
         if (hitType === 'obstacle') break;
         if (hitType === 'mirror') {
-          // Calculate reflection
           const m = mirrors[hitIndex];
           const nx1 = Math.sin(m.angle), ny1 = -Math.cos(m.angle);
           let dot = dx * nx1 + dy * ny1;
@@ -388,10 +385,8 @@
           dot = dx * nx + dy * ny;
           dx = dx - 2 * dot * nx;
           dy = dy - 2 * dot * ny;
-          // Normalize
           const nmag = Math.hypot(dx, dy);
           if (nmag) { dx /= nmag; dy /= nmag; }
-          // Offset starting point slightly to avoid immediate re-collision
           sx = hitPoint.x + dx * 0.1;
           sy = hitPoint.y + dy * 0.1;
         }
@@ -463,7 +458,6 @@
     function onPointerDown(e) {
       e.preventDefault();
       const { x, y } = getPointerPos(e);
-      // Check if a mirror's rotation handle is touched
       for (let i = currentLevel.mirrors.length - 1; i >= 0; i--) {
         const m = currentLevel.mirrors[i];
         const halfLen = 50;
@@ -556,10 +550,19 @@
     gameLoop();
     
     // --- Start Game Button ---
-    startBtn.addEventListener('click', () => {
-      document.getElementById('startPage').style.display = 'none';
+    const startBtn = document.getElementById('startBtn');
+    function startGame() {
+      // Remove start overlay from the DOM so it doesn't intercept touches
+      const startPage = document.getElementById('startPage');
+      if (startPage) {
+        startPage.parentNode.removeChild(startPage);
+      }
       loadLevel(0);
-    });
+    }
+    // Attach both click and touchstart listeners for iPhone compatibility
+    startBtn.addEventListener('click', startGame);
+    startBtn.addEventListener('touchstart', startGame);
+    
   </script>
 </body>
 </html>

@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="favicon.png">
   <meta charset="UTF-8">
   <title>Chromatic Conundrum: Obstacles & Progressive Difficulty</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/png" href="favicon.png">
   <style>
     html, body {
       margin: 0;
@@ -15,7 +16,7 @@
       font-family: Arial, sans-serif;
       color: #fff;
     }
-    /* Fullscreen canvas */
+    /* Fullscreen canvas with proper touch handling */
     #gameCanvas {
       display: block;
       width: 100vw;
@@ -53,7 +54,7 @@
       padding: 10px 20px;
       cursor: pointer;
     }
-    /* Timer display (only visible in timed mode) */
+    /* Timer display */
     #timerDisplay {
       position: fixed;
       top: 10px;
@@ -103,21 +104,32 @@
   <div id="overlay">Level Complete! Tap to continue</div>
   
   <script>
-    // --- Global Variables and Setup ---
+    // --- Canvas Setup with Retina Scaling ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    let canvasWidth, canvasHeight;
+    function setupCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      canvasWidth = window.innerWidth;
+      canvasHeight = window.innerHeight;
+      // Set CSS size
+      canvas.style.width = canvasWidth + 'px';
+      canvas.style.height = canvasHeight + 'px';
+      // Set actual canvas size scaled by device pixel ratio
+      canvas.width = canvasWidth * dpr;
+      canvas.height = canvasHeight * dpr;
+      // Scale the context so that drawing operations are in CSS pixels
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    setupCanvas();
+    
+    // --- Global Variables and Element References ---
     const overlay = document.getElementById('overlay');
     const startBtn = document.getElementById('startBtn');
     const timerDisplay = document.getElementById('timerDisplay');
-    let canvasWidth = window.innerWidth;
-    let canvasHeight = window.innerHeight;
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    
     let gameFinished = false;
-    let timedMode = false; // First play is untimed; becomes true after "Play Again"/"Try Again"
-    let timerValue = 25;
-    let timerInterval = null;
+    let timedMode = false; // Untimed for first play; true after "Play Again" / "Try Again"
+    let timerValue = 25, timerInterval = null;
     
     // --- Game Object Classes ---
     class LightSource {
@@ -140,7 +152,7 @@
         this.x = x;
         this.y = y;
         this.angle = angle; // in radians
-        this.type = type;   // 'fixed'
+        this.type = type;   // e.g., 'fixed'
       }
       draw() {
         const col = '#0af';
@@ -149,20 +161,15 @@
         const halfLen = 50;
         const ex = Math.cos(this.angle) * halfLen;
         const ey = Math.sin(this.angle) * halfLen;
-        const x1 = this.x + ex, y1 = this.y + ey;
-        const x2 = this.x - ex, y2 = this.y - ey;
         ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+        ctx.moveTo(this.x + ex, this.y + ey);
+        ctx.lineTo(this.x - ex, this.y - ey);
         ctx.stroke();
         // Draw rotation handle
         ctx.fillStyle = col;
         ctx.beginPath();
-        ctx.arc(x1, y1, 6, 0, 2 * Math.PI);
+        ctx.arc(this.x + ex, this.y + ey, 6, 0, 2 * Math.PI);
         ctx.fill();
-      }
-      rotate(deltaAngle) {
-        this.angle += deltaAngle;
       }
     }
     
@@ -185,7 +192,7 @@
       }
     }
     
-    /* --- Level Definitions --- */
+    // --- Level Definitions ---
     function createLevels() {
       const levels = [];
       // Level 1
@@ -261,70 +268,60 @@
     let currentLevel = levelsArray[currentLevelIndex];
     let solved = false;
     
-    /* --- Full Screen Resize --- */
-    function resizeCanvas() {
-      canvasWidth = window.innerWidth;
-      canvasHeight = window.innerHeight;
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
+    // --- Full Screen Resize ---
+    window.addEventListener('resize', () => {
+      setupCanvas();
       levelsArray = createLevels();
       loadLevel(currentLevelIndex);
-    }
-    window.addEventListener('resize', resizeCanvas);
+    });
     
-    /* --- Level Loading --- */
+    // --- Level Loading ---
     function loadLevel(index) {
       gameFinished = false;
       currentLevelIndex = index;
-      // Recreate levels to reset them
       levelsArray = createLevels();
       currentLevel = levelsArray[index];
-      // Convert angles from degrees to radians (fresh conversion every time)
-      currentLevel.source.angle = currentLevel.source.angle * Math.PI / 180;
-      currentLevel.mirrors.forEach(m => { m.angle = m.angle * Math.PI / 180; });
+      // Convert angles from degrees to radians
+      currentLevel.source.angle *= Math.PI / 180;
+      currentLevel.mirrors.forEach(m => { m.angle *= Math.PI / 180; });
       solved = false;
       overlay.style.visibility = 'hidden';
       overlay.innerHTML = 'Level Complete! Tap to continue';
       if(timedMode) {
-         resetTimer();
-         startTimer();
-         timerDisplay.style.display = 'block';
+        resetTimer();
+        startTimer();
+        timerDisplay.style.display = 'block';
       } else {
-         timerDisplay.style.display = 'none';
+        timerDisplay.style.display = 'none';
       }
     }
     
-    /* --- Beam Casting (Ray-Tracing) --- */
+    // --- Ray Casting (Beam Tracing) ---
     function castRay() {
       const { source, mirrors, obstacles, target } = currentLevel;
       let sx = source.x, sy = source.y;
       let dx = Math.cos(source.angle), dy = Math.sin(source.angle);
-      const mag = Math.hypot(dx, dy);
-      if (mag !== 0) { dx /= mag; dy /= mag; }
       const segments = [];
       const maxBounces = 10;
       for (let i = 0; i < maxBounces; i++) {
-        let closestT = Infinity;
-        let hitType = null;
-        let hitIndex = -1;
-        let hitPoint = null;
+        let closestT = Infinity, hitType = null, hitIndex = -1, hitPoint = null;
         
         // Check target (circle)
-        const tx = target.x, ty = target.y, tr = target.radius;
-        const A = dx*dx + dy*dy;
-        const B = 2 * ((sx - tx)*dx + (sy - ty)*dy);
-        const C = (sx - tx)**2 + (sy - ty)**2 - tr*tr;
-        const disc = B*B - 4*A*C;
-        if (disc >= 0) {
-          const t1 = (-B - Math.sqrt(disc)) / (2*A);
-          const t2 = (-B + Math.sqrt(disc)) / (2*A);
-          let tTarget = Infinity;
-          if (t1 > 0) tTarget = t1;
-          if (t2 > 0 && t2 < tTarget) tTarget = t2;
-          if (tTarget < closestT) {
-            closestT = tTarget;
-            hitType = 'target';
-            hitPoint = { x: sx + dx*tTarget, y: sy + dy*tTarget };
+        {
+          const A = dx * dx + dy * dy;
+          const B = 2 * ((sx - target.x) * dx + (sy - target.y) * dy);
+          const C = (sx - target.x) ** 2 + (sy - target.y) ** 2 - target.radius * target.radius;
+          const disc = B * B - 4 * A * C;
+          if (disc >= 0) {
+            const t1 = (-B - Math.sqrt(disc)) / (2 * A);
+            const t2 = (-B + Math.sqrt(disc)) / (2 * A);
+            let tTarget = (t1 > 0) ? t1 : Infinity;
+            if (t2 > 0 && t2 < tTarget) tTarget = t2;
+            if (tTarget < closestT) {
+              closestT = tTarget;
+              hitType = 'target';
+              hitPoint = { x: sx + dx * tTarget, y: sy + dy * tTarget };
+            }
           }
         }
         
@@ -342,7 +339,7 @@
               closestT = t;
               hitType = 'obstacle';
               hitIndex = idx;
-              hitPoint = { x: sx + dx*t, y: sy + dy*t };
+              hitPoint = { x: sx + dx * t, y: sy + dy * t };
             }
           });
         });
@@ -359,18 +356,19 @@
             closestT = t;
             hitType = 'mirror';
             hitIndex = idx;
-            hitPoint = { x: sx + dx*t, y: sy + dy*t };
+            hitPoint = { x: sx + dx * t, y: sy + dy * t };
           }
         });
         
         if (closestT === Infinity || !hitPoint) {
+          // Extend ray to canvas bounds
           let tBound = Infinity;
           if (dx > 0) tBound = Math.min(tBound, (canvasWidth - sx) / dx);
           if (dx < 0) tBound = Math.min(tBound, -sx / dx);
           if (dy > 0) tBound = Math.min(tBound, (canvasHeight - sy) / dy);
           if (dy < 0) tBound = Math.min(tBound, -sy / dy);
           if (tBound === Infinity) tBound = 1000;
-          segments.push({ x1: sx, y1: sy, x2: sx+dx*tBound, y2: sy+dy*tBound });
+          segments.push({ x1: sx, y1: sy, x2: sx + dx * tBound, y2: sy + dy * tBound });
           break;
         }
         segments.push({ x1: sx, y1: sy, x2: hitPoint.x, y2: hitPoint.y });
@@ -379,21 +377,21 @@
           solved = true;
           break;
         }
-        if (hitType === 'obstacle') {
-          break;
-        }
+        if (hitType === 'obstacle') break;
         if (hitType === 'mirror') {
+          // Calculate reflection
           const m = mirrors[hitIndex];
-          const nx1 = Math.sin(m.angle);
-          const ny1 = -Math.cos(m.angle);
+          const nx1 = Math.sin(m.angle), ny1 = -Math.cos(m.angle);
           let dot = dx * nx1 + dy * ny1;
-          let nx = nx1, ny = ny1;
-          if (dot > 0) { nx = -nx1; ny = -ny1; }
+          let nx = (dot > 0) ? -nx1 : nx1;
+          let ny = (dot > 0) ? -ny1 : ny1;
           dot = dx * nx + dy * ny;
           dx = dx - 2 * dot * nx;
           dy = dy - 2 * dot * ny;
+          // Normalize
           const nmag = Math.hypot(dx, dy);
-          if (nmag !== 0) { dx /= nmag; dy /= nmag; }
+          if (nmag) { dx /= nmag; dy /= nmag; }
+          // Offset starting point slightly to avoid immediate re-collision
           sx = hitPoint.x + dx * 0.1;
           sy = hitPoint.y + dy * 0.1;
         }
@@ -402,7 +400,6 @@
     }
     
     function getLineIntersection(sx, sy, dx, dy, x1, y1, x2, y2) {
-      const r_px = sx, r_py = sy;
       const r_dx = dx, r_dy = dy;
       const s_dx = x2 - x1, s_dy = y2 - y1;
       const r_mag = Math.hypot(r_dx, r_dy);
@@ -410,13 +407,13 @@
       if (r_dx / r_mag === s_dx / s_mag && r_dy / r_mag === s_dy / s_mag) return null;
       const denom = r_dx * s_dy - r_dy * s_dx;
       if (denom === 0) return null;
-      const t = ((x1 - r_px) * s_dy - (y1 - r_py) * s_dx) / denom;
-      const u = ((x1 - r_px) * r_dy - (y1 - r_py) * r_dx) / denom;
+      const t = ((x1 - sx) * s_dy - (y1 - sy) * s_dx) / denom;
+      const u = ((x1 - sx) * r_dy - (y1 - sy) * r_dx) / denom;
       if (t >= 0 && u >= 0 && u <= 1) return t;
       return null;
     }
     
-    /* --- Drawing the Game --- */
+    // --- Drawing the Game ---
     function drawGame() {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       const segments = castRay();
@@ -431,17 +428,17 @@
       // Draw source
       ctx.fillStyle = '#ff0';
       ctx.beginPath();
-      ctx.arc(currentLevel.source.x, currentLevel.source.y, 5, 0, 2*Math.PI);
+      ctx.arc(currentLevel.source.x, currentLevel.source.y, 5, 0, 2 * Math.PI);
       ctx.fill();
       // Draw target
       ctx.strokeStyle = '#f00';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(currentLevel.target.x, currentLevel.target.y, currentLevel.target.radius, 0, 2*Math.PI);
+      ctx.arc(currentLevel.target.x, currentLevel.target.y, currentLevel.target.radius, 0, 2 * Math.PI);
       ctx.stroke();
       ctx.fillStyle = '#f00';
       ctx.beginPath();
-      ctx.arc(currentLevel.target.x, currentLevel.target.y, 3, 0, 2*Math.PI);
+      ctx.arc(currentLevel.target.x, currentLevel.target.y, 3, 0, 2 * Math.PI);
       ctx.fill();
       // Draw obstacles
       currentLevel.obstacles.forEach(obs => {
@@ -449,44 +446,31 @@
         ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
       });
       // Draw mirrors
-      currentLevel.mirrors.forEach(m => {
-        ctx.strokeStyle = '#0af';
-        ctx.lineWidth = 4;
-        const halfLen = 50;
-        const ex = Math.cos(m.angle) * halfLen;
-        const ey = Math.sin(m.angle) * halfLen;
-        const x1 = m.x + ex, y1 = m.y + ey;
-        const x2 = m.x - ex, y2 = m.y - ey;
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-        ctx.fillStyle = '#0af';
-        ctx.beginPath();
-        ctx.arc(x1, y1, 6, 0, 2*Math.PI);
-        ctx.fill();
-      });
+      currentLevel.mirrors.forEach(m => m.draw());
     }
     
-    /* --- Pointer Events for Mirror Rotation --- */
-    let draggingMirrorIndex = null;
-    let dragMode = null;
-    let currentPointerId = null;
+    // --- Pointer (and Touch) Events for Mirror Rotation ---
+    let draggingMirrorIndex = null, currentPointerId = null;
+    
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) * (canvasWidth / rect.width),
+        y: (e.clientY - rect.top) * (canvasHeight / rect.height)
+      };
+    }
     
     function onPointerDown(e) {
       e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const px = (e.clientX - rect.left) * (canvasWidth / rect.width);
-      const py = (e.clientY - rect.top) * (canvasHeight / rect.height);
+      const { x, y } = getPointerPos(e);
+      // Check if a mirror's rotation handle is touched
       for (let i = currentLevel.mirrors.length - 1; i >= 0; i--) {
         const m = currentLevel.mirrors[i];
         const halfLen = 50;
-        const ex = Math.cos(m.angle) * halfLen;
-        const ey = Math.sin(m.angle) * halfLen;
-        const hx = m.x + ex, hy = m.y + ey;
-        if (Math.hypot(px - hx, py - hy) < 10) {
+        const hx = m.x + Math.cos(m.angle) * halfLen;
+        const hy = m.y + Math.sin(m.angle) * halfLen;
+        if (Math.hypot(x - hx, y - hy) < 10) {
           draggingMirrorIndex = i;
-          dragMode = 'rotate';
           currentPointerId = e.pointerId;
           return;
         }
@@ -495,20 +479,17 @@
     
     function onPointerMove(e) {
       if (draggingMirrorIndex === null || e.pointerId !== currentPointerId) return;
-      const rect = canvas.getBoundingClientRect();
-      const px = (e.clientX - rect.left) * (canvasWidth / rect.width);
-      const py = (e.clientY - rect.top) * (canvasHeight / rect.height);
+      const { x, y } = getPointerPos(e);
       const m = currentLevel.mirrors[draggingMirrorIndex];
-      m.angle = Math.atan2(py - m.y, px - m.x);
+      m.angle = Math.atan2(y - m.y, x - m.x);
     }
     
     function onPointerUp(e) {
       if (e.pointerId !== currentPointerId) return;
       draggingMirrorIndex = null;
-      dragMode = null;
       currentPointerId = null;
       if (solved) {
-        if(timedMode) { resetTimer(); }
+        if (timedMode) resetTimer();
         overlay.style.visibility = 'visible';
       }
     }
@@ -518,15 +499,15 @@
     canvas.addEventListener('pointerup', onPointerUp);
     canvas.addEventListener('pointercancel', onPointerUp);
     
-    /* --- Timer Functions --- */
+    // --- Timer Functions ---
     function startTimer() {
       timerValue = 25;
       timerDisplay.innerText = "Time: " + timerValue;
       timerDisplay.style.display = "block";
-      timerInterval = setInterval(function() {
+      timerInterval = setInterval(() => {
         timerValue--;
         timerDisplay.innerText = "Time: " + timerValue;
-        if(timerValue <= 0) {
+        if (timerValue <= 0) {
           clearInterval(timerInterval);
           timeOut();
         }
@@ -534,7 +515,7 @@
     }
     
     function resetTimer() {
-      if(timerInterval) {
+      if (timerInterval) {
         clearInterval(timerInterval);
         timerInterval = null;
       }
@@ -551,7 +532,7 @@
       });
     }
     
-    /* --- Overlay Click: Advance Level or Final Message --- */
+    // --- Overlay Click: Advance Level or End Game ---
     overlay.addEventListener('click', () => {
       const next = currentLevelIndex + 1;
       if (next < levelsArray.length) {
@@ -567,20 +548,18 @@
       }
     });
     
-    /* --- Main Game Loop --- */
+    // --- Main Game Loop ---
     function gameLoop() {
       drawGame();
       requestAnimationFrame(gameLoop);
     }
     gameLoop();
     
-    /* --- Start Game Button --- */
+    // --- Start Game Button ---
     startBtn.addEventListener('click', () => {
       document.getElementById('startPage').style.display = 'none';
       loadLevel(0);
     });
-    
   </script>
 </body>
 </html>
-

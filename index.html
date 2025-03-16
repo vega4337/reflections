@@ -112,13 +112,10 @@
       const dpr = window.devicePixelRatio || 1;
       canvasWidth = window.innerWidth;
       canvasHeight = window.innerHeight;
-      // Set CSS size
       canvas.style.width = canvasWidth + 'px';
       canvas.style.height = canvasHeight + 'px';
-      // Set actual canvas size scaled by device pixel ratio
       canvas.width = canvasWidth * dpr;
       canvas.height = canvasHeight * dpr;
-      // Scale the context so that drawing operations are in CSS pixels
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
     setupCanvas();
@@ -127,7 +124,7 @@
     const overlay = document.getElementById('overlay');
     const timerDisplay = document.getElementById('timerDisplay');
     let gameFinished = false;
-    let timedMode = false; // Untimed for first play; true after "Play Again" / "Try Again"
+    let timedMode = false; // Untimed for first play; becomes true after "Play Again"/"Try Again"
     let timerValue = 25, timerInterval = null;
     
     // --- Game Object Classes ---
@@ -151,7 +148,7 @@
         this.x = x;
         this.y = y;
         this.angle = angle; // in radians
-        this.type = type;   // e.g., 'fixed'
+        this.type = type;
       }
       draw() {
         const col = '#0af';
@@ -280,9 +277,9 @@
       currentLevelIndex = index;
       levelsArray = createLevels();
       currentLevel = levelsArray[index];
-      // Convert angles from degrees to radians
-      currentLevel.source.angle *= Math.PI / 180;
-      currentLevel.mirrors.forEach(m => { m.angle *= Math.PI / 180; });
+      // Convert source angle and create Mirror instances (with angles in radians)
+      currentLevel.source.angle = currentLevel.source.angle * Math.PI / 180;
+      currentLevel.mirrors = currentLevel.mirrors.map(m => new Mirror(m.x, m.y, m.angle * Math.PI / 180, m.type));
       solved = false;
       overlay.style.visibility = 'hidden';
       overlay.innerHTML = 'Level Complete! Tap to continue';
@@ -552,14 +549,12 @@
     // --- Start Game Button ---
     const startBtn = document.getElementById('startBtn');
     function startGame() {
-      // Remove start overlay from the DOM so it doesn't intercept touches
       const startPage = document.getElementById('startPage');
       if (startPage) {
         startPage.parentNode.removeChild(startPage);
       }
       loadLevel(0);
     }
-    // Attach both click and touchstart listeners for iPhone compatibility
     startBtn.addEventListener('click', startGame);
     startBtn.addEventListener('touchstart', startGame);
     

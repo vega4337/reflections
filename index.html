@@ -124,7 +124,7 @@
     const overlay = document.getElementById('overlay');
     const timerDisplay = document.getElementById('timerDisplay');
     let gameFinished = false;
-    let timedMode = false; // Untimed for first play; true after "Play Again"/"Try Again"
+    let timedMode = false; // Untimed for first play; becomes true after "Play Again"/"Try Again"
     let timerValue = 25, timerInterval = null;
     
     // --- Game Object Classes ---
@@ -188,80 +188,126 @@
       }
     }
     
-    // --- Level Definitions ---
+    // --- Level Definitions (Using Proportional Positions) ---
     function createLevels() {
       const levels = [];
+      
       // Level 1
       levels.push({
-        source: { x: 50, y: canvasHeight / 2, angle: 0 },
-        target: { x: canvasWidth - 50, y: canvasHeight / 2, radius: 10 },
+        source: { x: canvasWidth * 0.1, y: canvasHeight / 2, angle: 0 },
+        target: { x: canvasWidth * 0.9, y: canvasHeight / 2, radius: 8 },
         mirrors: [
           { x: canvasWidth / 2, y: canvasHeight / 2, angle: -45, type: 'fixed' }
         ],
         obstacles: []
       });
+      
       // Level 2
       levels.push({
-        source: { x: 50, y: canvasHeight / 2 + 50, angle: -10 },
-        target: { x: canvasWidth - 50, y: canvasHeight / 2 - 50, radius: 10 },
+        source: { x: canvasWidth * 0.1, y: canvasHeight / 2 + canvasHeight * 0.075, angle: -10 },
+        target: { x: canvasWidth * 0.9, y: canvasHeight / 2 - canvasHeight * 0.075, radius: 8 },
         mirrors: [
-          { x: canvasWidth / 3, y: canvasHeight / 2, angle: 20, type: 'fixed' },
-          { x: canvasWidth * 2 / 4.5, y: canvasHeight / 3.8, angle: 90, type: 'fixed' }
+          { x: canvasWidth * 0.35, y: canvasHeight / 2, angle: 20, type: 'fixed' },
+          { x: canvasWidth * 0.55, y: canvasHeight * 0.3, angle: 90, type: 'fixed' }
         ],
         obstacles: [
-          { x: canvasWidth / 2 - 50, y: canvasHeight / 2 - 25, width: 100, height: 90 }
+          { 
+            x: canvasWidth / 2 - canvasWidth * 0.1, 
+            y: canvasHeight / 2 - canvasHeight * 0.04, 
+            width: canvasWidth * 0.2, 
+            height: canvasHeight * 0.13 
+          }
         ]
       });
+      
       // Level 3
       levels.push({
-        source: { x: 50, y: canvasHeight / 2, angle: 0 },
-        target: { x: canvasWidth - 50, y: canvasHeight / 2 - 100, radius: 10 },
+        source: { x: canvasWidth * 0.1, y: canvasHeight / 2, angle: 0 },
+        target: { x: canvasWidth * 0.9, y: canvasHeight / 2 - canvasHeight * 0.15, radius: 8 },
         mirrors: [
-          { x: canvasWidth / 4, y: canvasHeight / 1.8 - 50, angle: 80, type: 'fixed' },
-          { x: canvasWidth / 2, y: canvasHeight / 1.2 + 50, angle: -20, type: 'fixed' },
-          { x: canvasWidth * 2.9 / 4, y: canvasHeight / 2, angle: 40, type: 'fixed' }
+          { x: canvasWidth * 0.25, y: canvasHeight * 0.55, angle: 80, type: 'fixed' },
+          { x: canvasWidth * 0.5, y: canvasHeight * 0.9, angle: -20, type: 'fixed' },
+          { x: canvasWidth * 0.725, y: canvasHeight / 2, angle: 40, type: 'fixed' }
         ],
         obstacles: [
-          { x: canvasWidth / 3 - 40, y: canvasHeight / 2 - 30, width: 80, height: 40 },
-          { x: canvasWidth * 2.3 / 3 - 40, y: canvasHeight / 1.5 - 40, width: 90, height: 40 }
+          { 
+            x: canvasWidth * 0.33 - canvasWidth * 0.1, 
+            y: canvasHeight / 2 - canvasHeight * 0.045, 
+            width: canvasWidth * 0.2, 
+            height: canvasHeight * 0.06 
+          },
+          { 
+            x: canvasWidth * 0.77 - canvasWidth * 0.1, 
+            y: canvasHeight / 1.5 - canvasHeight * 0.06, 
+            width: canvasWidth * 0.24, 
+            height: canvasHeight * 0.06 
+          }
         ]
       });
+      
       // Level 4
       levels.push({
-        source: { x: 50, y: canvasHeight / 2 + 50, angle: 0 },
-        target: { x: canvasWidth - 50, y: 100, radius: 10 },
+        source: { x: canvasWidth * 0.1, y: canvasHeight / 2 + canvasHeight * 0.075, angle: 0 },
+        target: { x: canvasWidth * 0.9, y: canvasHeight * 0.15, radius: 8 },
         mirrors: [
-          { x: canvasWidth / 4, y: canvasHeight / 1.85 + 20, angle: 10, type: 'fixed' },
-          { x: canvasWidth / 2, y: canvasHeight / 1.2, angle: 0, type: 'fixed' },
-          { x: canvasWidth * 3.1 / 4, y: canvasHeight / 1.94 - 20, angle: -20, type: 'fixed' }
+          { x: canvasWidth * 0.25, y: canvasHeight * 0.55 + canvasHeight * 0.03, angle: 10, type: 'fixed' },
+          { x: canvasWidth * 0.5, y: canvasHeight * 0.83, angle: 0, type: 'fixed' },
+          { x: canvasWidth * 0.78, y: canvasHeight * 0.515, angle: -20, type: 'fixed' }
         ],
         obstacles: [
-          { x: canvasWidth / 3 - 15, y: canvasHeight / 2 - 100, width: 30, height: 200 },
-          { x: canvasWidth * 2 / 3 - 50, y: canvasHeight / 2, width: 120, height: 30 }
+          { 
+            x: canvasWidth * 0.33 - canvasWidth * 0.04, 
+            y: canvasHeight / 2 - canvasHeight * 0.15, 
+            width: canvasWidth * 0.08, 
+            height: canvasHeight * 0.3 
+          },
+          { 
+            x: canvasWidth * 0.66 - canvasWidth * 0.1, 
+            y: canvasHeight / 2, 
+            width: canvasWidth * 0.24, 
+            height: canvasHeight * 0.045 
+          }
         ]
       });
+      
       // Level 5
       levels.push({
-        source: { x: 50, y: canvasHeight / 2, angle: 0 },
-        target: { x: canvasWidth - 50, y: canvasHeight / 2, radius: 10 },
+        source: { x: canvasWidth * 0.1, y: canvasHeight / 2, angle: 0 },
+        target: { x: canvasWidth * 0.9, y: canvasHeight / 2, radius: 8 },
         mirrors: [
-          { x: canvasWidth / 5, y: canvasHeight / 1.9 - 50, angle: 30, type: 'fixed' },
-          { x: canvasWidth / 2.95, y: canvasHeight / 1.3 + 50, angle: -30, type: 'fixed' },
-          { x: canvasWidth / 2, y: canvasHeight / 3.5, angle: 10, type: 'fixed' },
-          { x: canvasWidth * 3.27 / 4, y: canvasHeight / 1.3 + 50, angle: -10, type: 'fixed' }
+          { x: canvasWidth * 0.2, y: canvasHeight * 0.55, angle: 30, type: 'fixed' },
+          { x: canvasWidth * 0.34, y: canvasHeight * 0.85, angle: -30, type: 'fixed' },
+          { x: canvasWidth * 0.5, y: canvasHeight * 0.3, angle: 10, type: 'fixed' },
+          { x: canvasWidth * 0.82, y: canvasHeight * 0.85, angle: -10, type: 'fixed' }
         ],
         obstacles: [
-          { x: canvasWidth / 3 - 50, y: canvasHeight / 2 - 100, width: 150, height: 105 },
-          { x: canvasWidth * 2 / 3 + 10, y: canvasHeight / 2 - 100, width: 40, height: 200 },
-          { x: canvasWidth / 2 - 100, y: canvasHeight / 2 - 20, width: 200, height: 45 }
+          { 
+            x: canvasWidth * 0.33 - canvasWidth * 0.13, 
+            y: canvasHeight / 2 - canvasHeight * 0.15, 
+            width: canvasWidth * 0.27, 
+            height: canvasHeight * 0.16 
+          },
+          { 
+            x: canvasWidth * 0.66 + canvasWidth * 0.02, 
+            y: canvasHeight / 2 - canvasHeight * 0.15, 
+            width: canvasWidth * 0.11, 
+            height: canvasHeight * 0.3 
+          },
+          { 
+            x: canvasWidth * 0.5 - canvasWidth * 0.27, 
+            y: canvasHeight / 2 - canvasHeight * 0.06, 
+            width: canvasWidth * 0.54, 
+            height: canvasHeight * 0.07 
+          }
         ]
       });
+      
       return levels;
     }
     
     let levelsArray = createLevels();
     let currentLevelIndex = 0;
-    // Set currentLevel to null so that the game loop doesn’t run until startGame is triggered.
+    // Delay drawing until startGame is called.
     let currentLevel = null;
     let solved = false;
     
@@ -277,9 +323,10 @@
       gameFinished = false;
       currentLevelIndex = index;
       levelsArray = createLevels();
-      // Convert the plain mirror objects into Mirror instances (angles in radians)
       const level = levelsArray[index];
+      // Convert the source angle to radians.
       level.source.angle = level.source.angle * Math.PI / 180;
+      // Convert plain mirror objects into Mirror instances.
       level.mirrors = level.mirrors.map(m => new Mirror(m.x, m.y, m.angle * Math.PI / 180, m.type));
       currentLevel = level;
       solved = false;
@@ -543,9 +590,7 @@
     
     // --- Main Game Loop ---
     function gameLoop() {
-      if (currentLevel) {
-        drawGame();
-      }
+      if (currentLevel) drawGame();
       requestAnimationFrame(gameLoop);
     }
     gameLoop();
@@ -554,9 +599,7 @@
     const startBtn = document.getElementById('startBtn');
     function startGame() {
       const startPage = document.getElementById('startPage');
-      if (startPage) {
-        startPage.parentNode.removeChild(startPage);
-      }
+      if (startPage) startPage.parentNode.removeChild(startPage);
       loadLevel(0);
     }
     startBtn.addEventListener('click', startGame);

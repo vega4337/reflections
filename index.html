@@ -124,7 +124,7 @@
     const overlay = document.getElementById('overlay');
     const timerDisplay = document.getElementById('timerDisplay');
     let gameFinished = false;
-    let timedMode = false; // Untimed for first play; becomes true after "Play Again"/"Try Again"
+    let timedMode = false; // Untimed for first play; true after "Play Again"/"Try Again"
     let timerValue = 25, timerInterval = null;
     
     // --- Game Object Classes ---
@@ -261,14 +261,15 @@
     
     let levelsArray = createLevels();
     let currentLevelIndex = 0;
-    let currentLevel = levelsArray[currentLevelIndex];
+    // Set currentLevel to null so that the game loop doesn’t run until startGame is triggered.
+    let currentLevel = null;
     let solved = false;
     
     // --- Full Screen Resize ---
     window.addEventListener('resize', () => {
       setupCanvas();
       levelsArray = createLevels();
-      loadLevel(currentLevelIndex);
+      if (currentLevel !== null) loadLevel(currentLevelIndex);
     });
     
     // --- Level Loading ---
@@ -276,10 +277,11 @@
       gameFinished = false;
       currentLevelIndex = index;
       levelsArray = createLevels();
-      currentLevel = levelsArray[index];
-      // Convert source angle and create Mirror instances (with angles in radians)
-      currentLevel.source.angle = currentLevel.source.angle * Math.PI / 180;
-      currentLevel.mirrors = currentLevel.mirrors.map(m => new Mirror(m.x, m.y, m.angle * Math.PI / 180, m.type));
+      // Convert the plain mirror objects into Mirror instances (angles in radians)
+      const level = levelsArray[index];
+      level.source.angle = level.source.angle * Math.PI / 180;
+      level.mirrors = level.mirrors.map(m => new Mirror(m.x, m.y, m.angle * Math.PI / 180, m.type));
+      currentLevel = level;
       solved = false;
       overlay.style.visibility = 'hidden';
       overlay.innerHTML = 'Level Complete! Tap to continue';
@@ -541,7 +543,9 @@
     
     // --- Main Game Loop ---
     function gameLoop() {
-      drawGame();
+      if (currentLevel) {
+        drawGame();
+      }
       requestAnimationFrame(gameLoop);
     }
     gameLoop();

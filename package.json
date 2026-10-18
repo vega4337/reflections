@@ -1,5 +1,5 @@
 {
-  "name": "reflections", "version": "2.0.0", "private": true, "type": "module",
+  "name": "reflections", "version": "2.1.0", "private": true, "type": "module",
   "scripts": { "test": "node --test", "start": "node server.js" },
   "engines": { "node": ">=20" }
 }

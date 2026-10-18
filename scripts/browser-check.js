@@ -39,9 +39,17 @@ async page => {
   await page.keyboard.press('Shift+ArrowLeft');
   check(await page.getByRole('slider').inputValue() === '159', 'Shift keyboard rotation is 5 degrees');
   // Solve every experiment through the visible selection and slider controls.
-  const solutions = await page.evaluate(async () => (await import('./levels.js')).levels.map(level => level.mirrors.map(m => m.solution)));
-  for (let index = 0; index < solutions.length; index++) {
+  const catalog = await page.evaluate(async () => { const { levels, chapters } = await import('./levels.js'); return { solutions: levels.map(level => level.mirrors.map(m => m.solution)), chapters }; });
+  const solutions = catalog.solutions;
+  const selectLevel = async index => {
+    const chapter = catalog.chapters.findIndex(c => index >= c.start && index < c.end);
+    await page.getByRole('combobox', { name: 'Choose a chapter' }).selectOption(String(chapter));
     await page.locator(`[data-level="${index}"]`).click();
+  };
+  check(solutions.length === 38, 'Thirty new levels are available');
+  check(await page.locator('#mirrors text').count() === 0, 'Mirrors have no visible numbers');
+  for (let index = 0; index < solutions.length; index++) {
+    await selectLevel(index);
     for (let mirror = 0; mirror < solutions[index].length; mirror++) {
       await page.getByRole('button', { name: `Select mirror ${mirror + 1}`, exact: true }).click();
       await page.getByRole('slider').evaluate((slider, angle) => { slider.value = angle; slider.dispatchEvent(new Event('input', { bubbles: true })); slider.dispatchEvent(new Event('change', { bubbles: true })); }, solutions[index][mirror]);
@@ -50,10 +58,20 @@ async page => {
     check(await page.locator('.receiver-awake').count() === 1, 'Receiver visibly lights up');
     await page.getByRole('button', { name: 'Stay and admire' }).click();
   }
-  check(await page.locator('#progressText').textContent() === '8 of 8 connected', 'All completion states recorded');
+  check(await page.locator('#progressText').textContent() === '38 of 38 connected', 'All completion states recorded');
+  check((await page.locator('#resultDescription').textContent()).startsWith('38 experiments.'), 'Final completion text uses the expanded catalog');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await selectLevel(37);
+  check(await page.getByRole('button', { name: 'Select mirror 10', exact: true }).isVisible(), 'Mobile supports ten-mirror controls');
+  await page.getByRole('button', { name: 'Select mirror 10', exact: true }).click();
+  const beforeAngle = Number(await page.getByRole('slider').inputValue());
+  await page.getByRole('button', { name: 'Rotate selected mirror clockwise 5 degrees', exact: true }).click();
+  check(Number(await page.getByRole('slider').inputValue()) === (beforeAngle + 5) % 180, 'Mobile last mirror rotates');
+  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Late levels fit the phone width');
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.reload();
-  check(await page.locator('#progressText').textContent() === '8 of 8 connected', 'Progress persists after reload');
-  await page.locator('[data-level="7"]').click();
+  check(await page.locator('#progressText').textContent() === '38 of 38 connected', 'Progress persists after reload');
+  await selectLevel(7);
   await page.getByRole('button', { name: 'A little help', exact: false }).click();
   check(await page.getByRole('slider').inputValue() === '135', 'Hint aligns first mirror');
   check(!(await page.locator('#resultDialog').isVisible()), 'One hint does not auto-solve multi-mirror level');
@@ -75,8 +93,8 @@ async page => {
   check((await page.locator('#timer').textContent()).includes('90s'), 'Retry creates fresh timer');
   await page.clock.fastForward(91000);
   await page.getByRole('button', { name: 'Switch to Calm mode' }).click();
-  check(await page.getByRole('combobox').inputValue() === 'calm', 'Timeout supports Calm mode');
+  check(await page.getByRole('combobox', { name: 'YOUR PACE' }).inputValue() === 'calm', 'Timeout supports Calm mode');
   check(await page.locator('#timer').textContent() === 'Take your time.', 'Calm mode stops timer');
   check(errors.length === 0, `Browser exceptions: ${errors.join(', ')}`);
-  console.log('PASS: desktop, mobile resize, real mouse drag, no stale win, keyboard, all eight solutions, persistence, hints, timer pause, timeout, retry, Calm mode, and no browser errors.');
+  console.log('PASS: desktop, mobile resize, real mouse drag, no stale win, keyboard, all 38 solutions, persistence, hints, timer pause, timeout, retry, Calm mode, and no browser errors.');
 }

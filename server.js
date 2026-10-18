@@ -1,7 +1,7 @@
 // Local preview only. Production is plain static hosting, with no build step.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-const types = { 'index.html': 'text/html', 'styles.css': 'text/css', 'game.js': 'text/javascript', 'optics.js': 'text/javascript', 'levels.js': 'text/javascript' };
+const types = { 'index.html': 'text/html', 'styles.css': 'text/css', 'game.js': 'text/javascript', 'optics.js': 'text/javascript', 'levels.js': 'text/javascript', 'advanced-levels.js': 'text/javascript' };
 const port = Number(process.env.PORT || 4173);
 createServer(async (request, response) => {
   const file = new URL(request.url, 'http://localhost').pathname.slice(1) || 'index.html';

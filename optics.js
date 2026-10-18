@@ -74,8 +74,8 @@ export function buildLevel({ route, obstacles = [], ...metadata }) {
   const points = route.map(([x, y]) => ({ x, y }));
   const heading = (a, b) => Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
   const mirrors = points.slice(1, -1).map((point, index) => {
-    const solution = normalizeAngle((heading(points[index], point) + heading(point, points[index + 2])) / 2);
-    return { ...point, solution, angle: normalizeAngle(solution + [30, -30, 60, -45, 30][index]) };
+    const solution = normalizeAngle(Math.round((heading(points[index], point) + heading(point, points[index + 2])) / 2 * 1e10) / 1e10);
+    return { ...point, solution, angle: normalizeAngle(solution + [30, -30, 60, -45, 30][index % 5]) };
   });
   return { ...metadata, route: points, source: { ...points[0], angle: heading(points[0], points[1]) }, target: { ...points.at(-1), radius: 18 }, mirrors, obstacles };
 }

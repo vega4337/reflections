@@ -23,9 +23,9 @@
       </section>
       <div class="game-layout">
         <section class="play-area" aria-label="Puzzle board">
-          <div class="board-toolbar"><div><span class="live-dot"></span><span id="boardState">LIGHT IN MOTION</span></div><span id="boardCounter">EXPERIMENT 01 / 08</span></div>
+          <div class="board-toolbar"><div><span class="live-dot"></span><span id="boardState">LIGHT IN MOTION</span></div><span id="boardCounter">EXPERIMENT 01 / 38</span></div>
           <div class="board-wrap">
-            <svg id="board" viewBox="0 0 960 600" aria-label="Light puzzle: select a numbered mirror to rotate it" role="group">
+            <svg id="board" viewBox="0 0 960 600" aria-label="Light puzzle: select a mirror to rotate it" role="group">
               <defs>
                 <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="#294044"/></pattern>
                 <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="#476066" stroke-width="2"/></pattern>
@@ -49,11 +49,11 @@
           <p class="hint" id="hint" aria-live="polite">Start at the source. Follow the light.</p>
         </aside>
       </div>
-      <section class="journey" aria-label="Choose an experiment"><div class="journey-heading"><h2>Your experiments</h2><span id="progressText">0 of 8 connected</span></div><div class="level-list" id="levelList"></div></section>
+      <section class="journey" aria-label="Choose an experiment"><div class="journey-heading"><h2>Your experiments</h2><span id="progressText">0 of 38 connected</span></div><div class="chapter-navigation"><label for="chapterChoice">CHAPTER</label><select id="chapterChoice" aria-label="Choose a chapter"></select></div><div class="level-list" id="levelList"></div></section>
       <footer class="page-footer"><span>A change of angle changes everything.</span><span>REFLECTIONS / THE LIGHT LAB</span></footer>
     </main>
   </div>
-  <dialog id="helpDialog" aria-labelledby="helpTitle"><button class="dialog-close" id="closeHelp" aria-label="Close instructions">×</button><p class="eyebrow">WELCOME TO THE LIGHT LAB</p><h2 id="helpTitle">Small turns.<br>Bright ideas.</h2><p>Guide the warm beam from the source into the circular receiver. Mirrors reflect light at equal angles; striped barriers stop it.</p><ol><li><strong>Select a mirror.</strong> Tap a numbered mirror or its button beside the board.</li><li><strong>Find the angle.</strong> Drag either end of the mirror, use the slider, or turn it in 5° steps. Arrow keys on a mirror adjust by 1°; Shift + arrow adjusts by 5°.</li><li><strong>Follow the beam.</strong> Work from the source toward the receiver. Release the handle or slider to confirm a connection.</li></ol><p>All eight experiments are open to explore. “A little help” aligns the next mirror in the intended path. Calm mode has no time limit; Challenge gives you 90 seconds per experiment.</p><button class="primary" id="startPlaying">Let there be light <span>↗</span></button></dialog>
+  <dialog id="helpDialog" aria-labelledby="helpTitle"><button class="dialog-close" id="closeHelp" aria-label="Close instructions">×</button><p class="eyebrow">WELCOME TO THE LIGHT LAB</p><h2 id="helpTitle">Small turns.<br>Bright ideas.</h2><p>Guide the warm beam from the source into the circular receiver. Mirrors reflect light at equal angles; striped barriers stop it.</p><ol><li><strong>Select a mirror.</strong> Tap a mirror or select it in the control panel. The ring highlights the selected mirror.</li><li><strong>Find the angle.</strong> Drag either end of the mirror, use the slider, or turn it in 5° steps. Arrow keys on a mirror adjust by 1°; Shift + arrow adjusts by 5°.</li><li><strong>Follow the beam.</strong> Work from the source toward the receiver. Release the handle or slider to confirm a connection.</li></ol><p>All 38 experiments are open to explore across eight chapters. After the first five, expect longer routes, diagonal reflections, and tighter passages. “A little help” aligns the next mirror in the intended path. Calm mode has no time limit; Challenge gives you 90 seconds per experiment.</p><button class="primary" id="startPlaying">Let there be light <span>↗</span></button></dialog>
   <dialog id="resultDialog" aria-labelledby="resultTitle"><p class="eyebrow" id="resultEyebrow">CONNECTION ESTABLISHED</p><div class="result-art" aria-hidden="true">✳</div><h2 id="resultTitle">Beautifully connected.</h2><p id="resultDescription"></p><button class="primary" id="nextButton">Next experiment <span>→</span></button><button class="quiet result-secondary" id="reviewButton">Stay and admire</button></dialog>
 </body>
 </html>

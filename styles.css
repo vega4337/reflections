@@ -55,7 +55,7 @@ select { background: var(--panel); padding: 11px 30px 11px 12px; border: 1px sol
 .control-heading { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .control-heading h3 { font-size: 14px; font-weight: 500; margin: 0; }
 .pill { font-size: 8px; color: var(--mint); letter-spacing: 1px; border: 1px solid #526b48; border-radius: 4px; padding: 4px 6px; }
-.mirror-picker { display: flex; gap: 6px; margin: 16px 0 20px; }
+.mirror-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 6px; margin: 16px 0 20px; }
 .mirror-picker button { flex: 1; min-width: 0; height: 44px; font-size: 11px; }
 .mirror-picker button[aria-pressed=true] { background: #c4f39b; color: #142119; border-color: #c4f39b; }
 .angle-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--muted); }
@@ -73,7 +73,7 @@ input[type=range] { width: 100%; margin: 8px 0 12px; accent-color: var(--mint); 
 .journey-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .journey-heading h2 { font-size: 13px; font-weight: 500; margin: 0; }
 .journey-heading > span { color: var(--muted); font-size: 11px; }
-.level-list { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+.level-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .level-card { position: relative; text-align: left; padding: 13px 12px; min-height: 83px; border-radius: 7px; }
 .level-card[aria-current=step] { background: #c4f3100d; border-color: var(--mint); }
 .level-card[aria-current=step] .level-card-number { color: var(--mint); }
@@ -90,8 +90,6 @@ input[type=range] { width: 100%; margin: 8px 0 12px; accent-color: var(--mint); 
 .mirror-surface { stroke: #b3ede4; stroke-width: 5; stroke-linecap: round; }
 .mirror-handle { fill: #b3ede4; stroke: #102326; stroke-width: 2; }
 .mirror-center { fill: #142c2f; stroke: #b3ede4; stroke-width: 2; }
-.mirror-label { fill: #b8c9c9; font-size: 14px; font-family: 'Segoe UI', sans-serif; text-anchor: middle; }
-.mirror-object.selected .mirror-label { fill: var(--mint); }
 .endpoint-label { fill: #b8c9c9; font-size: 12px; letter-spacing: 2px; text-anchor: middle; }
 .receiver-ring { stroke: var(--mint); stroke-width: 2; fill: #152b27; }
 .receiver-awake { fill: var(--mint); }
@@ -114,7 +112,12 @@ dialog strong { color: var(--text); }
 @media (min-width: 1600px) { .intro { padding: 48px 0 40px; } }
 @media (max-width: 1100px) { .shell { padding: 0 28px; } .game-layout { grid-template-columns: minmax(0, 1fr) 250px; gap: 20px; } .board-footer { padding: 12px; } .legend { gap: 12px; } .level-card { padding: 12px 9px; } }
 @media (max-width: 850px) { .game-layout { grid-template-columns: 1fr; } .sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 24px; } .mirror-control { grid-column: 2; grid-row: 1 / 4; } .utility-actions { align-self: end; } .hint { margin: 0; } .level-list { grid-template-columns: repeat(4, 1fr); } .edition { display: none; } .level-info > p:not(.eyebrow) { min-height: 0; } }
-@media (max-width: 540px) { .shell { padding: 0 16px; } .topbar { height: 76px; } .brand { font-size: 24px; } .brand svg { width: 28px; margin-right: 8px; } .top-actions { gap: 0; } .quiet { font-size: 11px; } .quiet span { margin-left: 8px; } .intro { display: block; padding: 26px 0 20px; } h1 { font-size: 36px; max-width: 320px; } .intro-copy { font-size: 12px; line-height: 1.7; } .intro .eyebrow { font-size: 8px; letter-spacing: 1.4px; } .mode-switch { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; } .mode-switch label { font-size: 8px; } select { font-size: 11px; padding: 9px; max-width: 210px; } .board-toolbar { padding: 0 12px; font-size: 7px; letter-spacing: 1px; min-height: 38px; } .board-footer { font-size: 8px; min-height: 42px; padding: 10px; } .legend { gap: 9px; } .legend > span { gap: 4px; } .board-message { font-size: 8px; bottom: 6px; } .sidebar { gap: 12px; } .level-info .eyebrow { font-size: 8px; margin-bottom: 10px; } .level-info h2 { font-size: 21px; } .level-info > p:not(.eyebrow) { font-size: 11px; } .difficulty { display: grid; gap: 8px; padding: 12px 0; } .mirror-control { padding: 12px; } .control-heading h3 { font-size: 12px; } .pill { font-size: 6px; padding: 3px; } .mirror-picker { gap: 3px; flex-wrap: wrap; margin: 12px 0; } .mirror-picker button { min-width: 40px; flex: 1 0 25%; } .control-tip { font-size: 9px; } .angle-row { font-size: 9px; } .rotate-buttons span { margin: 0 4px; } .utility-actions { grid-template-columns: 1fr; gap: 6px; margin: 0; } .hint { font-size: 10px; } .level-card { min-height: 80px; } .page-footer { font-size: 9px; } .page-footer > :last-child { display: none; } dialog { padding: 28px; } }
-@media (max-width: 540px) { .mirror-label { font-size: 28px; } .endpoint-label { font-size: 22px; letter-spacing: 1px; } }
+@media (max-width: 540px) { .shell { padding: 0 16px; } .topbar { height: 76px; } .brand { font-size: 24px; } .brand svg { width: 28px; margin-right: 8px; } .top-actions { gap: 0; } .quiet { font-size: 11px; } .quiet span { margin-left: 8px; } .intro { display: block; padding: 26px 0 20px; } h1 { font-size: 36px; max-width: 320px; } .intro-copy { font-size: 12px; line-height: 1.7; } .intro .eyebrow { font-size: 8px; letter-spacing: 1.4px; } .mode-switch { margin-top: 18px; display: flex; align-items: center; justify-content: space-between; } .mode-switch label { font-size: 8px; } select { font-size: 11px; padding: 9px; max-width: 210px; } .board-toolbar { padding: 0 12px; font-size: 7px; letter-spacing: 1px; min-height: 38px; } .board-footer { font-size: 8px; min-height: 42px; padding: 10px; } .legend { gap: 9px; } .legend > span { gap: 4px; } .board-message { font-size: 8px; bottom: 6px; } .sidebar { gap: 12px; } .level-info .eyebrow { font-size: 8px; margin-bottom: 10px; } .level-info h2 { font-size: 21px; } .level-info > p:not(.eyebrow) { font-size: 11px; } .difficulty { display: grid; gap: 8px; padding: 12px 0; } .mirror-control { padding: 10px; } .control-heading h3 { font-size: 12px; } .pill { font-size: 6px; padding: 3px; } .mirror-picker { gap: 4px; margin: 12px 0; } .mirror-picker button { min-width: 40px; flex: 1 0 25%; } .control-tip { font-size: 9px; } .angle-row { font-size: 9px; } .rotate-buttons span { margin: 0 4px; } .utility-actions { grid-template-columns: 1fr; gap: 6px; margin: 0; } .hint { font-size: 10px; } .level-card { min-height: 80px; } .page-footer { font-size: 9px; } .page-footer > :last-child { display: none; } dialog { padding: 28px; } }
+@media (max-width: 540px) { .endpoint-label { font-size: 22px; letter-spacing: 1px; } }
 @media (max-width: 540px) and (min-height: 650px) { .play-area { position: sticky; top: 8px; z-index: 2; box-shadow: 0 8px 24px #0c171a88; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; } }
+
+.chapter-navigation { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.chapter-navigation label { font-size: 9px; letter-spacing: 1.5px; color: var(--muted); }
+.chapter-navigation select { min-width: 230px; }
+@media (max-width: 540px) { .chapter-navigation select { min-width: 0; max-width: none; flex: 1; } .level-list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

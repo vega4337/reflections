@@ -1,4 +1,4 @@
-import { levels } from './levels.js';
+import { levels, chapters } from './levels.js';
 import { traceBeam, mirrorEnds, normalizeAngle } from './optics.js';
 
 const $ = id => document.getElementById(id);
@@ -11,6 +11,7 @@ try {
 } catch { /* Private browsing and damaged saves must not prevent play. */ }
 
 let levelIndex = 0, level, selected = 0, status = 'playing', trace;
+let selectedChapter = 0;
 let drag = null, deadline = null, pauseStarted = null, hintCount = 0;
 const board = $('board');
 
@@ -20,11 +21,16 @@ function saveProgress() {
 
 function renderJourney() {
   $('progressText').textContent = `${completed.size} of ${levels.length} connected`;
-  $('levelList').innerHTML = levels.map((item, i) => `<button class="level-card" data-level="${i}" ${i === levelIndex ? 'aria-current="step"' : ''} aria-label="Experiment ${i + 1}: ${item.title}${completed.has(i) ? ', completed' : ''}"><span class="level-card-number">${number(i)}</span><span class="level-card-title">${item.title}</span>${completed.has(i) ? '<span class="completed-mark" aria-hidden="true">✓</span>' : ''}</button>`).join('');
+  const chapter = chapters[selectedChapter];
+  $('chapterChoice').value = selectedChapter;
+  $('levelList').innerHTML = levels.slice(chapter.start, chapter.end).map((item, offset) => {
+    const i = chapter.start + offset;
+    return `<button class="level-card" data-level="${i}" ${i === levelIndex ? 'aria-current="step"' : ''} aria-label="Experiment ${i + 1}: ${item.title}${completed.has(i) ? ', completed' : ''}"><span class="level-card-number">${number(i)}</span><span class="level-card-title">${item.title}</span>${completed.has(i) ? '<span class="completed-mark" aria-hidden="true">✓</span>' : ''}</button>`;
+  }).join('');
 }
 
 function renderMirrors() {
-  $('mirrors').innerHTML = level.mirrors.map((m, i) => `<g class="mirror-object" data-mirror="${i}" tabindex="0" role="button"><circle class="mirror-orbit" cx="${m.x}" cy="${m.y}" r="44"/><line class="mirror-surface"/><circle class="mirror-handle handle-a" r="6"/><circle class="mirror-handle handle-b" r="6"/><circle class="mirror-center" cx="${m.x}" cy="${m.y}" r="5"/><text class="mirror-label" x="${m.x}" y="${m.y + 66}">${number(i)}</text></g>`).join('');
+  $('mirrors').innerHTML = level.mirrors.map((m, i) => `<g class="mirror-object" data-mirror="${i}" tabindex="0" role="button"><circle class="mirror-orbit" cx="${m.x}" cy="${m.y}" r="44"/><line class="mirror-surface"/><circle class="mirror-handle handle-a" r="6"/><circle class="mirror-handle handle-b" r="6"/><circle class="mirror-center" cx="${m.x}" cy="${m.y}" r="5"/></g>`).join('');
   $('mirrorPicker').innerHTML = level.mirrors.map((_, i) => `<button data-select="${i}" aria-label="Select mirror ${i + 1}">${number(i)}</button>`).join('');
 }
 
@@ -80,7 +86,7 @@ function checkCompletion() {
   completed.add(levelIndex); saveProgress(); renderJourney(); updateMirrors(); updateTimer();
   $('resultEyebrow').textContent = 'CONNECTION ESTABLISHED';
   $('resultTitle').textContent = completed.size === levels.length ? 'Everything connects.' : 'Beautifully connected.';
-  $('resultDescription').textContent = completed.size === levels.length ? 'Eight experiments. A whole new way of seeing the light. Revisit any experiment or try Challenge mode.' : `${level.title} is complete.${hintCount ? ' A little help, a little discovery.' : ' You found your way through.'}`;
+  $('resultDescription').textContent = completed.size === levels.length ? `${levels.length} experiments. A whole new way of seeing the light. Revisit any experiment or try Challenge mode.` : `${level.title} is complete.${hintCount ? ' A little help, a little discovery.' : ' You found your way through.'}`;
   $('nextButton').innerHTML = levelIndex === levels.length - 1 ? 'Explore again <span>↺</span>' : 'Next experiment <span>→</span>';
   $('reviewButton').textContent = 'Stay and admire';
   $('resultDialog').showModal();
@@ -90,6 +96,7 @@ function loadLevel(index) {
   cancelDrag(true);
   $('resultDialog').close();
   levelIndex = index; level = structuredClone(levels[index]); selected = 0; status = 'playing'; hintCount = 0;
+  selectedChapter = chapters.findIndex(chapter => index >= chapter.start && index < chapter.end);
   deadline = $('mode').value === 'challenge' ? Date.now() + 90000 : null;
   pauseStarted = null;
   $('levelNumber').textContent = `EXPERIMENT ${number(index)}`;
@@ -164,6 +171,11 @@ $('hintButton').addEventListener('click', () => {
 $('levelList').addEventListener('click', event => {
   const button = event.target.closest('[data-level]');
   if (button) loadLevel(Number(button.dataset.level));
+});
+$('chapterChoice').innerHTML = chapters.map((chapter, i) => `<option value="${i}">${chapter.title} · ${number(chapter.start)}–${number(chapter.end - 1)}</option>`).join('');
+$('chapterChoice').addEventListener('change', event => {
+  selectedChapter = Number(event.target.value);
+  renderJourney();
 });
 $('mode').addEventListener('change', () => loadLevel(levelIndex));
 $('nextButton').addEventListener('click', () => loadLevel(status === 'timeout' ? levelIndex : (levelIndex + 1) % levels.length));

@@ -1,9 +1,60 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { levels } from '../levels.js';
+import { levels, chapters } from '../levels.js';
 import { BOARD, MIRROR_HALF_LENGTH, traceBeam, raySegment, reflect } from '../optics.js';
 const solvedLevel = level => ({ ...structuredClone(level), mirrors: level.mirrors.map(m => ({ ...m, angle: m.solution })) });
 const close = (a, b) => assert.ok(Math.abs(a - b) < 1e-6, `${a} != ${b}`);
+
+test('38 unique experiments are covered exactly once by the chapter picker', () => {
+  assert.equal(levels.length, 38);
+  assert.equal(new Set(levels.map(level => level.title)).size, 38);
+  assert.deepEqual(chapters.flatMap(chapter => Array.from({ length: chapter.end - chapter.start }, (_, i) => chapter.start + i)), levels.map((_, i) => i));
+});
+test('difficulty increases after the introduction without pixel-perfect angles', () => {
+  for (let i = 5; i < levels.length; i++) {
+    assert.ok(levels[i].mirrors.length >= levels[i - 1].mirrors.length);
+    for (const mirror of levels[i].mirrors) close(mirror.solution / 5, Math.round(mirror.solution / 5));
+  }
+  for (let i = 9; i < levels.length; i++) {
+    assert.ok(levels[i].clearance < levels[i - 1].clearance);
+    assert.ok(levels[i].minimumReflections >= levels[i - 1].minimumReflections);
+  }
+  assert.equal(levels.at(-1).mirrors.length, 10);
+});
+test('advanced layouts block simple center-to-center shortcuts', () => {
+  for (const level of levels.slice(8)) {
+    const points = level.route, distances = points.map(() => Infinity), queue = [1];
+    distances[1] = 1;
+    const blocked = (a, b) => {
+      const length = Math.hypot(b.x - a.x, b.y - a.y), direction = { x: (b.x - a.x) / length, y: (b.y - a.y) / length };
+      return level.obstacles.some(r => {
+        const corners = [{x:r.x,y:r.y},{x:r.x+r.width,y:r.y},{x:r.x+r.width,y:r.y+r.height},{x:r.x,y:r.y+r.height}];
+        return corners.some((point, i) => {
+          const t = raySegment(a, direction, point, corners[(i + 1) % 4]);
+          return t !== null && t < length;
+        });
+      });
+    };
+    while (queue.length) {
+      const from = queue.shift();
+      for (let to = 1; to < points.length; to++) {
+        if (from === to || distances[to] <= distances[from] + 1 || blocked(points[from], points[to])) continue;
+        distances[to] = distances[from] + 1; queue.push(to);
+      }
+    }
+    assert.ok(distances.at(-1) - 1 >= level.minimumReflections, level.title);
+  }
+});
+test('all solutions are reachable with normal 5-degree controls and sequential hints', () => {
+  for (const template of levels) {
+    const level = structuredClone(template);
+    for (let i = 0; i < level.mirrors.length; i++) {
+      assert.equal(traceBeam(level).solved, false, `${level.title}: unexpected early completion`);
+      level.mirrors[i].angle = Math.round(level.mirrors[i].solution / 5) * 5;
+    }
+    assert.equal(traceBeam(level).solved, true, template.title);
+  }
+});
 
 for (const [index, level] of levels.entries()) {
   test(`experiment ${index + 1}: intended route solves in mirror order`, () => {
